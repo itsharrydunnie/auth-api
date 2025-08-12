@@ -2,9 +2,15 @@ const users = require("../data/users");
 
 const registerUser = function (data) {
   // First we check if user exists, by checking if email is available on any of the users and if username is available
-  const ifUserExist = users.some((e) => e.email === "user2@gmail.com");
-  const userNameTaken = users.some((e) => e.userName === "user2");
+  if (users.some((user) => user.email === data.email)) {
+    return { status: false, message: "email already exit" };
+  }
 
+  if (users.some((user) => user.userName === data.userName)) {
+    return { status: false, message: "username already exit" };
+  }
+
+  /// Create new user
   const newUser = {
     name: data.name,
     email: data.email,
@@ -15,24 +21,18 @@ const registerUser = function (data) {
   users.push(newUser);
 
   //   return { ifUserExist, userNameTaken };
-  return newUser;
+  return { status: true, message: "user sucessfully created", newUser };
 };
 
-console.log(
-  registerUser({
-    email: "user1@gmail.com",
-    userName: "user1",
-    password: "",
-  })
-);
-console.log(
-  registerUser({
-    email: "user2@gmail.com",
-    userName: "user2",
-    password: "happiness",
-  })
-);
+const logInUser = function (logInInfo) {};
+
+// const isUserTaken = function (users, email, userName) {
+//   return users.some(
+//     (user) => user.email === email || user.userName === userName
+//   );
+// };
 
 module.exports = {
   registerUser,
+  logInUser,
 };
