@@ -1,4 +1,8 @@
-const { registerUser, logInUser } = require("../controller/controller");
+const {
+  registerUser,
+  logInUser,
+  dataValid,
+} = require("../controller/controller");
 
 /// match each request to the rigth controller functions
 
@@ -31,14 +35,7 @@ const router = function (req, res) {
       try {
         const data = JSON.parse(body);
         // check to see we have a valid data
-
-        const dataIsValid = Object.values(data).some(
-          (value) => typeof value !== "string" || value === ""
-        );
-
-        if (dataIsValid) {
-          throw new Error("data missing or not valid");
-        }
+        dataValid(data);
 
         const result = registerUser(data);
 
@@ -63,6 +60,41 @@ const router = function (req, res) {
       }
     });
   } else if (url === "/login" && method === "POST") {
+    let body = "";
+
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+
+    req.on("end", () => {
+      try {
+        const data = JSON.parse(body);
+        // check to see we have a valid data
+        dataValid(data);
+
+        //if we do call our login
+        const result = logInUser(data);
+
+        switch (result.status) {
+          case false:
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: `${result.message}` }));
+            break;
+
+          case true:
+            res.statusCode = 200;
+            res.end(
+              JSON.stringify({ message: result.message, user: result.userData })
+            );
+            console.log(result.newUser);
+            break;
+        }
+      } catch (error) {
+        console.log(error.message, "missing value");
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: error.message }));
+      }
+    });
   } else if (urlRegex.test(url) && method === "GET") {
   }
 };
