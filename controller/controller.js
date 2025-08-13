@@ -35,6 +35,7 @@ const logInUser = function (logInInfo) {
         status: true,
         message: `Welcome ${user.name}`,
         userData: { userInfo: "All data about users goes hear" },
+        login: true,
       };
     } else {
       return { status: false, message: "invalid credentials" };
@@ -57,6 +58,9 @@ const dataValid = function (data) {
 const checkUser = function (email) {
   return users.find((user) => user.email === email);
 };
+const getUser = function (userName) {
+  return users.find((user) => user.userName === userName);
+};
 
 // const isUserTaken = function (users, email, userName) {
 //   return users.some(
@@ -68,4 +72,6 @@ module.exports = {
   registerUser,
   logInUser,
   dataValid,
+  checkUser,
+  getUser,
 };

@@ -2,6 +2,8 @@ const {
   registerUser,
   logInUser,
   dataValid,
+  checkUser,
+  getUser,
 } = require("../controller/controller");
 
 /// match each request to the rigth controller functions
@@ -14,6 +16,8 @@ const router = function (req, res) {
   // Length: 3–20 characters
   const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
   const urlRegex = /^\/profile\/[a-zA-Z0-9_-]{3,20}$/;
+
+  let loggedin = true;
 
   res.setHeader("content-type", "application/json");
 
@@ -82,6 +86,7 @@ const router = function (req, res) {
             break;
 
           case true:
+            loggedin = result.login;
             res.statusCode = 200;
             res.end(
               JSON.stringify({ message: result.message, user: result.userData })
@@ -96,6 +101,16 @@ const router = function (req, res) {
       }
     });
   } else if (urlRegex.test(url) && method === "GET") {
+    const userName = url.split("/")[2];
+
+    if (loggedin) {
+      const user = getUser(userName);
+      res.statusCode = 200;
+      res.end(JSON.stringify({ user: user }));
+    } else {
+      res.statusCode = 404;
+      res.end(JSON.stringify({ error: "please login" }));
+    }
   }
 };
 
