@@ -1,4 +1,5 @@
 const users = require("../data/users");
+const { hashPassword, createToken } = require("../utilities/utilities");
 
 const registerUser = function (data) {
   // First we check if user exists, by checking if email is available on any of the users and if username is available
@@ -15,13 +16,22 @@ const registerUser = function (data) {
     name: data.name,
     email: data.email,
     userName: data.userName,
-    password: data.password,
+    password: hashPassword(data.password),
+    token: createToken(),
   };
 
   users.push(newUser);
 
   //   return { ifUserExist, userNameTaken };
-  return { status: true, message: "user sucessfully created", newUser };
+  return {
+    status: true,
+    message: "user sucessfully created",
+    user: {
+      name: newUser.name,
+      email: newUser.email,
+      username: newUser.userName,
+    },
+  };
 };
 
 const logInUser = function (logInInfo) {
@@ -30,12 +40,16 @@ const logInUser = function (logInInfo) {
   console.log(user);
   if (user) {
     // we check if password match
-    if (logInInfo.password === user.password) {
+    if (hashPassword(logInInfo.password) === user.password) {
       return {
         status: true,
         message: `Welcome ${user.name}`,
-        userData: { userInfo: "All data about users goes hear" },
-        login: true,
+        userData: {
+          name: user.name,
+          email: user.email,
+          username: user.userName,
+          token: user.token,
+        },
       };
     } else {
       return { status: false, message: "invalid credentials" };
@@ -67,6 +81,8 @@ const getUser = function (userName) {
 //     (user) => user.email === email || user.userName === userName
 //   );
 // };
+
+//
 
 module.exports = {
   registerUser,

@@ -7,7 +7,19 @@
     "start": "node server.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "harry-dunnie",
   "license": "ISC",
+  "dependencies": {
+    "utilities": "^1.0.0"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itsharrydunnie/auth-api.git"
+  },
+  "bugs": {
+    "url": "https://github.com/itsharrydunnie/auth-api/issues"
+  },
+  "homepage": "https://github.com/itsharrydunnie/auth-api#readme",
   "description": ""
 }
