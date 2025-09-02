@@ -10,14 +10,14 @@ const {
 
 const router = function (req, res) {
   //   console.log(req);
-  const { url, method } = req;
+  const { url, method, headers } = req;
 
   // Allows letters, numbers, underscores, hyphens
   // Length: 3–20 characters
   const usernameRegex = /^[a-zA-Z0-9_-]{3,20}$/;
   const urlRegex = /^\/profile\/[a-zA-Z0-9_-]{3,20}$/;
 
-  let loggedin = true;
+  let token;
 
   res.setHeader("content-type", "application/json");
 
@@ -91,7 +91,7 @@ const router = function (req, res) {
             res.end(
               JSON.stringify({ message: result.message, user: result.userData })
             );
-            console.log(result.newUser);
+            token = result.userData.token;
             break;
         }
       } catch (error) {
@@ -101,16 +101,35 @@ const router = function (req, res) {
       }
     });
   } else if (urlRegex.test(url) && method === "GET") {
-    const userName = url.split("/")[2];
+    try {
+      const userName = url.split("/")[2];
+      const requiredToken = headers["authorization"].split(" ")[1];
+      if (!requiredToken) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ message: "unauthorized" }));
+      }
 
-    if (loggedin) {
-      const user = getUser(userName);
+      if (requiredToken !== token) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ message: "invalid token" }));
+      }
+
       res.statusCode = 200;
-      res.end(JSON.stringify({ user: user }));
-    } else {
-      res.statusCode = 404;
-      res.end(JSON.stringify({ error: "please login" }));
+      res.end(JSON.stringify({ user: userName, message: "sucess" }));
+    } catch (error) {
+      console.log(error);
+      res.statusCode = 500;
+      res.end(JSON.stringify({ message: "server error" }));
     }
+
+    // if (loggedin) {
+    //   const user = getUser(userName);
+    //   res.statusCode = 200;
+    //   res.end(JSON.stringify({ user: user }));
+    // } else {
+    //   res.statusCode = 404;
+    //   res.end(JSON.stringify({ error: "please login" }));
+    // }
   }
 };
 

@@ -17,7 +17,6 @@ const registerUser = function (data) {
     email: data.email,
     userName: data.userName,
     password: hashPassword(data.password),
-    token: createToken(),
   };
 
   users.push(newUser);
@@ -43,12 +42,12 @@ const logInUser = function (logInInfo) {
     if (hashPassword(logInInfo.password) === user.password) {
       return {
         status: true,
-        message: `Welcome ${user.name}`,
+        message: `Welcome ${user.name}. logged in sucessfully`,
         userData: {
           name: user.name,
           email: user.email,
           username: user.userName,
-          token: user.token,
+          token: createToken(),
         },
       };
     } else {
