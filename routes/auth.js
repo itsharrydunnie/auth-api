@@ -1,10 +1,12 @@
 const {
   registerUser,
   logInUser,
-  dataValid,
-  checkUser,
-  getUser,
+  returnUser,
 } = require("../controller/controller");
+
+const { authMiddleWare } = require("../middleware/authmiddleware");
+
+const { parseBody } = require("../utilities/utilities");
 
 /// match each request to the rigth controller functions
 
@@ -21,116 +23,101 @@ const router = function (req, res) {
 
   res.setHeader("content-type", "application/json");
 
-  if (url === "/home" && method === "GET") {
+  // home
+  if (url === `${"/" || "/home"}` && method === "GET") {
     res.statusCode = 200;
     res.end(
       JSON.stringify({
         message: "welcome to our application please signin or signup",
       })
     );
-  } else if (url === "/register" && method === "POST") {
-    let body = "";
+    return;
+  }
 
-    req.on("data", (chunk) => {
-      body += chunk.toString();
-    });
-
-    req.on("end", () => {
-      try {
-        const data = JSON.parse(body);
-        // check to see we have a valid data
-        dataValid(data);
-
+  // POST /register
+  if (url === "/register" && method === "POST") {
+    parseBody(req)
+      .then((data) => {
+        //register user
         const result = registerUser(data);
 
         switch (result.status) {
           case false:
-            res.statusCode = 401;
+            res.statusCode = result.statusCode;
             res.end(JSON.stringify({ error: `${result.message}` }));
             break;
 
           case true:
-            res.statusCode = 201;
+            res.statusCode = result.statusCode;
             res.end(
-              JSON.stringify({ message: result.message, user: result.newUser })
+              JSON.stringify({ message: result.message, user: result.user })
             );
-            console.log(result.newUser);
+            console.log(result.user);
             break;
         }
-      } catch (error) {
-        console.log(error.message, "missing value");
-        res.statusCode = 404;
-        res.end(JSON.stringify({ error: error.message }));
-      }
-    });
-  } else if (url === "/login" && method === "POST") {
-    let body = "";
+      })
+      .catch((err) => {
+        console.log(err.message);
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: "Something Went Wrong" }));
+      });
 
-    req.on("data", (chunk) => {
-      body += chunk.toString();
-    });
+    return;
+  }
 
-    req.on("end", () => {
-      try {
-        const data = JSON.parse(body);
-        // check to see we have a valid data
-        dataValid(data);
-
-        //if we do call our login
+  //POST /login
+  if (url === "/login" && method === "POST") {
+    parseBody(req)
+      .then((data) => {
         const result = logInUser(data);
 
         switch (result.status) {
           case false:
-            res.statusCode = 404;
+            res.statusCode = result.statusCode;
             res.end(JSON.stringify({ error: `${result.message}` }));
             break;
 
           case true:
-            loggedin = result.login;
-            res.statusCode = 200;
+            res.statusCode = result.statusCode;
             res.end(
-              JSON.stringify({ message: result.message, user: result.userData })
+              JSON.stringify({
+                message: result.message,
+                token: result.token,
+              })
             );
-            token = result.userData.token;
+
             break;
         }
-      } catch (error) {
-        console.log(error.message, "missing value");
-        res.statusCode = 404;
-        res.end(JSON.stringify({ error: error.message }));
-      }
-    });
-  } else if (urlRegex.test(url) && method === "GET") {
-    try {
-      const userName = url.split("/")[2];
-      const requiredToken = headers["authorization"].split(" ")[1];
-      if (!requiredToken) {
-        res.statusCode = 404;
-        res.end(JSON.stringify({ message: "unauthorized" }));
-      }
+      })
+      .catch((err) => {
+        console.log(err.message);
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: "Something Went Wrong" }));
+      });
 
-      if (requiredToken !== token) {
-        res.statusCode = 404;
-        res.end(JSON.stringify({ message: "invalid token" }));
-      }
-
-      res.statusCode = 200;
-      res.end(JSON.stringify({ user: userName, message: "sucess" }));
-    } catch (error) {
-      console.log(error);
-      res.statusCode = 500;
-      res.end(JSON.stringify({ message: "server error" }));
-    }
-
-    // if (loggedin) {
-    //   const user = getUser(userName);
-    //   res.statusCode = 200;
-    //   res.end(JSON.stringify({ user: user }));
-    // } else {
-    //   res.statusCode = 404;
-    //   res.end(JSON.stringify({ error: "please login" }));
-    // }
+    return;
   }
+
+  /// GET /profile
+  if (urlRegex.test(url) && method === "GET") {
+    authMiddleWare(req, res, (username) => {
+      result = returnUser(username);
+      res.statusCode = result.statusCode;
+      res.end(
+        JSON.stringify({
+          message: "Profile accessed",
+          user: result.user, // comes from controller
+        })
+      );
+    });
+
+    return;
+  }
+
+  //Fallback for unrecognized routes
+
+  res.statusCode = 404;
+  res.end(JSON.stringify({ message: "Not Found" }));
 };
 
 module.exports = router;

@@ -1,0 +1,24 @@
+[
+  {
+    "name": "User One",
+    "email": "user1@email.com",
+    "password": "password1",
+    "isAdmin": "true"
+  },
+  { "name": "User Two", "email": "user2@email.com", "password": "password2" },
+  { "name": "User Three", "email": "user3@email.com", "password": "password3" },
+
+  {
+    "name": "Harry-dunnie",
+    "email": "test@gmail.com",
+    "userName": "harrydunnie",
+    "password": "452d501dbe1163ac6bb5383dc87f1065c77be5e6f62feea6535904e9c35ea607",
+    "token": "bdde879c818c697f5ec3635bdc70c3e687733674"
+  },
+  {
+    "name": "Harry-dunnie",
+    "email": "test2@gmail.com",
+    "userName": "harrydunnie2",
+    "password": "452d501dbe1163ac6bb5383dc87f1065c77be5e6f62feea6535904e9c35ea607"
+  }
+]

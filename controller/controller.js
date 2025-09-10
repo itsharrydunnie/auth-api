@@ -1,14 +1,26 @@
-const users = require("../data/users");
+const { getUsers, loadUsers } = require("../data/users");
 const { hashPassword, createToken } = require("../utilities/utilities");
+const { addUser } = require("../data/users");
+
+loadUsers();
 
 const registerUser = function (data) {
-  // First we check if user exists, by checking if email is available on any of the users and if username is available
-  if (users.some((user) => user.email === data.email)) {
-    return { status: false, message: "email already exit" };
+  // if all data fields are valid
+  if (!isDataValid(data)) {
+    return {
+      status: false,
+      statusCode: 400,
+      message: "Invalid input. Please check your fields.",
+    };
   }
 
-  if (users.some((user) => user.userName === data.userName)) {
-    return { status: false, message: "username already exit" };
+  // First we check if user exists, by checking if email is available on any of the users
+  if (
+    getUsers().some(
+      (user) => user.email.toLowerCase() === data.email.toLowerCase()
+    )
+  ) {
+    return { status: false, statusCode: 409, message: "Email already exit" };
   }
 
   /// Create new user
@@ -19,74 +31,112 @@ const registerUser = function (data) {
     password: hashPassword(data.password),
   };
 
-  users.push(newUser);
+  addUser(newUser);
 
   //   return { ifUserExist, userNameTaken };
   return {
     status: true,
-    message: "user sucessfully created",
+    statusCode: 201,
+    message: "User sucessfully created",
     user: {
       name: newUser.name,
       email: newUser.email,
-      username: newUser.userName,
     },
   };
 };
 
 const logInUser = function (logInInfo) {
+  // if all data fields are valid
+  if (!isDataValid(logInInfo)) {
+    return {
+      status: false,
+      statusCode: 400,
+      message: "Invalid input. Please check your fields.",
+    };
+  }
+
   /// we first check to see if theres a user with that account
-  const user = checkUser(logInInfo.email);
-  console.log(user);
+  const user = getUserByEmail(logInInfo.email);
+
   if (user) {
     // we check if password match
     if (hashPassword(logInInfo.password) === user.password) {
+      user.token = createToken();
+      console.log(user, getUsers());
       return {
         status: true,
+        statusCode: 200,
         message: `Welcome ${user.name}. logged in sucessfully`,
-        userData: {
-          name: user.name,
-          email: user.email,
-          username: user.userName,
-          token: createToken(),
-        },
+        token: user.token,
       };
     } else {
-      return { status: false, message: "invalid credentials" };
+      return {
+        status: false,
+        statusCode: 400,
+        message: "Invalid credentials. Please input valid email or password",
+      };
     }
   } else {
-    return { status: false, message: "user not found" };
+    return {
+      status: false,
+      statusCode: 400,
+      message: "user not found",
+    };
   }
 };
 
-const dataValid = function (data) {
-  const dataIsValid = Object.values(data).some(
-    (value) => typeof value !== "string" || value === ""
+function returnUser(username) {
+  user = getUserByUsername(username);
+  return {
+    status: true,
+    statusCode: 200,
+    user: {
+      name: user.name,
+      username: user.userName,
+      email: user.email,
+    },
+  };
+}
+
+const isDataValid = function (data) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  // if allvvalues are string
+  for (const values of Object.values(data)) {
+    if (typeof values !== "string") {
+      return false;
+    }
+  }
+
+  // if email is correcct
+  if (!emailRegex.test(data?.email)) {
+    return false;
+  }
+
+  // for password length
+  if (!data?.password || data.password.length < 8) {
+    return false;
+  }
+
+  return true;
+};
+
+const getUserByEmail = function (email) {
+  return getUsers().find(
+    (user) => user.email.toLowerCase() === email.toLowerCase()
   );
-
-  if (dataIsValid) {
-    throw new Error("data missing or not valid");
-  }
 };
 
-const checkUser = function (email) {
-  return users.find((user) => user.email === email);
-};
-const getUser = function (userName) {
-  return users.find((user) => user.userName === userName);
+const getUserByUsername = function (username) {
+  return getUsers().find((user) => user.userName === username);
 };
 
-// const isUserTaken = function (users, email, userName) {
-//   return users.some(
-//     (user) => user.email === email || user.userName === userName
-//   );
-// };
-
-//
+console.log(getUserByUsername("harrydunnie2"), "line126");
 
 module.exports = {
   registerUser,
   logInUser,
-  dataValid,
-  checkUser,
-  getUser,
+  returnUser,
+  getUserByEmail,
+  getUserByUsername,
 };
